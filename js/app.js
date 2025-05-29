@@ -567,7 +567,7 @@ function processGabaritoQRData(data) {
         } catch (e) {
             // If not valid JSON, create a sample response object
             const respostas = {};
-            const options = ['A', 'B', 'C', 'D', 'E'];
+            const options = ['A', 'B', 'C', 'D'];
             
             // Generate random answers for 10 questions
             for (let i = 1; i <= 10; i++) {
