@@ -528,8 +528,7 @@ function processAlunoQRData(data) {
         currentCorrection.totalQuestoes = data.total_questoes;
 
         // Atualiza a interface com os dados reais do aluno
-        document.getElementById('aluno-nome').textContent = data.aluno_nome || 'N/A';
-        document.getElementById('aluno-matricula').textContent = data.matricula || 'N/A';
+        document.getElementById('aluno-nome').textContent = data.aluno_nome || 'Aluno não encontrado';
         document.getElementById('escola-nome').textContent = data.escola?.nome || 'N/A';
         document.getElementById('turma-nome').textContent = data.turma?.nome || 'N/A';
         document.getElementById('turma-serie').textContent = data.turma?.serie || 'N/A';
