@@ -513,9 +513,6 @@ function formatGabarito(gabarito) {
 // Process QR code data from step 1 (aluno data)
 function processAlunoQRData(data) {
     try {
-
-        console.log('[DEBUG] Dados recebidos:', data);
-
         // Se vier como string JSON contendo 'qr_codes'
         if (typeof data === 'object' && typeof data.qr_codes === 'string') {
             // Corrige aspas simples para aspas duplas
@@ -689,12 +686,6 @@ function startCamera() {
                 
                 // Adjust camera display
                 adjustCamera();
-                
-                // In a real implementation, we would initialize a QR code scanner library here
-                // For example: 
-                // initQRScanner();
-                
-                // For simulated demo, automatically trigger a QR code scan after a few seconds
                 setTimeout(simulateQRScan, 3000);
             })
             .catch(err => {
@@ -806,7 +797,6 @@ async function simulateQRScan() {
                 handleQRCodeDetection(result);
 
             } catch (error) {
-                console.error('Erro ao enviar imagem para a API:', error);
                 alert('Erro ao processar a imagem.');
             }
         }, 'image/png');
