@@ -486,6 +486,8 @@ function completeCorrection() {
     currentCorrection.aluno &&
     currentCorrection.gabarito
   ) {
+    alert(JSON.stringify(currentCorrection.gabarito));
+
     // Add to corrected items
     const newCorrecao = {
       id: CORRECOES.length + 1,
@@ -542,12 +544,16 @@ function processAlunoQRData(data) {
     currentCorrection.totalQuestoes = data.total_questoes;
 
     // Atualiza a interface com os dados reais do aluno
-    document.getElementById("aluno-nome").textContent = data.aluno_nome || "Aluno não encontrado";
-    document.getElementById("escola-nome").textContent = data.nome_da_escola || "N/A";
-    document.getElementById("turma-nome").textContent = data.nome_da_turma || "N/A";
+    document.getElementById("aluno-nome").textContent =
+      data.aluno_nome || "Aluno não encontrado";
+    document.getElementById("escola-nome").textContent =
+      data.nome_da_escola || "N/A";
+    document.getElementById("turma-nome").textContent =
+      data.nome_da_turma || "N/A";
     // document.getElementById("turma-serie").textContent = data.serie || "N/A";
     // document.getElementById("turma-turno").textContent = data.turno || "N/A";
-    document.getElementById("total-questoes").textContent = data.total_questoes || "N/A";
+    document.getElementById("total-questoes").textContent =
+      data.total_questoes || "N/A";
 
     // Mostra o painel de informações do aluno
     alunoInfo.classList.remove("hidden");
@@ -580,8 +586,6 @@ function processGabaritoQRData(data) {
       // If not valid JSON, create a sample response object
       const respostas = {};
       const options = ["A", "B", "C", "D"];
-
-      
 
       parsedData = {
         prova: "Avaliação Bimestral",
