@@ -645,13 +645,14 @@ function playSuccessSound() {
 // Render the list of completed corrections
 function renderCorrecoes() {
   qrResults.innerHTML = "";
+alert(JSON.stringify(correcao, null, 2));
 
   CORRECOES.forEach((correcao) => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
-            <td class="py-2 px-4 border-b">${correcao.aluno}</td>
-            <td class="py-2 px-4 border-b">${correcao.escola}</td>
-            <td class="py-2 px-4 border-b">${correcao.turma}</td>
+            <td class="py-2 px-4 border-b">${correcao.aluno_nome}</td>
+            <td class="py-2 px-4 border-b">${correcao.nome_da_escola}</td>
+            <td class="py-2 px-4 border-b">${correcao.nome_da_turma}</td>
             <td class="py-2 px-4 border-b">${correcao.gabarito}</td>
             <td class="py-2 px-4 border-b">
                 <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
