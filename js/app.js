@@ -640,7 +640,6 @@ function playSuccessSound() {
 }
 
 // Render the list of completed corrections
-// Render the list of completed corrections
 function renderCorrecoes() {
   qrResults.innerHTML = "";
 
