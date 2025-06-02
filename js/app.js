@@ -71,7 +71,6 @@ const alunoInfo = document.getElementById("aluno-info");
 const alunoNome = document.getElementById("aluno-nome");
 const alunoEscola = document.getElementById("aluno-escola");
 const alunoTurma = document.getElementById("aluno-turma");
-const alunoMatricula = document.getElementById("aluno-matricula");
 const resetScanBtn = document.getElementById("reset-scan");
 const nextStepBtn = document.getElementById("next-step");
 const completeCorrecaoBtn = document.getElementById("complete-correction");
@@ -531,6 +530,8 @@ function formatGabarito(gabarito) {
 // Process QR code data from step 1 (aluno data)
 function processAlunoQRData(data) {
   try {
+    console.log("[DEBUG] Dados recebidos:", data);
+
     // Se vier como string JSON contendo 'qr_codes'
     if (typeof data === "object" && typeof data.qr_codes === "string") {
       // Corrige aspas simples para aspas duplas
@@ -544,15 +545,11 @@ function processAlunoQRData(data) {
 
     // Atualiza a interface com os dados reais do aluno
     document.getElementById("aluno-nome").textContent =
-      data.aluno_nome || "Aluno não encontrado";
-    document.getElementById("escola-nome").textContent =
-      data.escola?.nome || "N/A";
-    document.getElementById("turma-nome").textContent =
-      data.turma?.nome || "N/A";
-    document.getElementById("turma-serie").textContent =
-      data.turma?.serie || "N/A";
-    document.getElementById("turma-turno").textContent =
-      data.turma?.turno || "N/A";
+      data.nome || "Aluno não encontrado";
+    document.getElementById("escola-nome").textContent = data.escola || "N/A";
+    document.getElementById("turma-nome").textContent = data.turma || "N/A";
+    document.getElementById("turma-serie").textContent = data.serie || "N/A";
+    document.getElementById("turma-turno").textContent = data.turno || "N/A";
     document.getElementById("total-questoes").textContent =
       data.total_questoes || "N/A";
 
