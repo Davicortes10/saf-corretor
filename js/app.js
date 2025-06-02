@@ -489,9 +489,9 @@ function completeCorrection() {
     // Add to corrected items
     const newCorrecao = {
       id: CORRECOES.length + 1,
-      aluno: currentCorrection.aluno.nome,
-      escola: currentCorrection.aluno.escola,
-      turma: currentCorrection.aluno.turma,
+      aluno: currentCorrection.aluno.aluno_nome,
+      escola: currentCorrection.aluno.nome_da_escola,
+      turma: currentCorrection.aluno.nome_da_turma,
       gabarito: formatGabarito(currentCorrection.gabarito),
       timestamp: new Date(),
       status: "Corrigido",
@@ -581,10 +581,7 @@ function processGabaritoQRData(data) {
       const respostas = {};
       const options = ["A", "B", "C", "D"];
 
-      // Generate random answers for 10 questions
-      for (let i = 1; i <= 10; i++) {
-        respostas[i] = options[Math.floor(Math.random() * options.length)];
-      }
+      
 
       parsedData = {
         prova: "Avaliação Bimestral",
