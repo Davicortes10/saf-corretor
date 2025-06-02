@@ -530,7 +530,7 @@ function formatGabarito(gabarito) {
 // Process QR code data from step 1 (aluno data)
 function processAlunoQRData(data) {
   try {
-    alert("[DEBUG] Dados recebidos:", data);
+    alert( data);
 
     // Se vier como string JSON contendo 'qr_codes'
     if (typeof data === "object" && typeof data.qr_codes === "string") {
