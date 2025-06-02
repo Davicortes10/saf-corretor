@@ -546,10 +546,10 @@ function processAlunoQRData(data) {
 
     // Atualiza a interface com os dados reais do aluno
     document.getElementById("aluno-nome").textContent = data.aluno_nome || "Aluno não encontrado";
-    document.getElementById("escola-nome").textContent = data.escola || "N/A";
-    document.getElementById("turma-nome").textContent = data.turma || "N/A";
-    document.getElementById("turma-serie").textContent = data.serie || "N/A";
-    document.getElementById("turma-turno").textContent = data.turno || "N/A";
+    document.getElementById("escola-nome").textContent = data.nome_da_escola || "N/A";
+    document.getElementById("turma-nome").textContent = data.nome_da_turma || "N/A";
+    // document.getElementById("turma-serie").textContent = data.serie || "N/A";
+    // document.getElementById("turma-turno").textContent = data.turno || "N/A";
     document.getElementById("total-questoes").textContent = data.total_questoes || "N/A";
 
     // Mostra o painel de informações do aluno
