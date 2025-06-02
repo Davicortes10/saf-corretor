@@ -645,7 +645,6 @@ function playSuccessSound() {
 // Render the list of completed corrections
 function renderCorrecoes() {
   qrResults.innerHTML = "";
-alert(JSON.stringify(correcao, null, 2));
 
   CORRECOES.forEach((correcao) => {
     const tr = document.createElement("tr");
