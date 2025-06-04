@@ -165,10 +165,26 @@ function adjustCamera() {
   if (cameraStream && qrVideo) {
     const videoContainer = qrVideo.parentElement;
     if (videoContainer) {
-      // Ensure video fills container while maintaining aspect ratio
-      const aspectRatio =
-        window.innerWidth > window.innerHeight ? 16 / 9 : 4 / 3;
-      videoContainer.style.paddingBottom = `${(1 / aspectRatio) * 100}%`;
+      if (currentCorrection.step === 2) {
+        // Para a etapa 2 (folha A4), usar proporção mais alta
+        videoContainer.style.maxWidth = "100%";
+        videoContainer.style.width = "500px"; // Largura máxima para desktop
+        videoContainer.style.paddingBottom = "141.4%"; // Proporção A4 (√2)
+
+        // Ajustes específicos para mobile
+        if (isMobile()) {
+          videoContainer.style.width = "100%";
+          videoContainer.style.maxHeight = "80vh";
+          videoContainer.style.paddingBottom = "141.4%";
+        }
+      } else {
+        // Para a etapa 1 (QR code), manter proporção mais quadrada
+        const aspectRatio =
+          window.innerWidth > window.innerHeight ? 4 / 3 : 3 / 4;
+        videoContainer.style.width = "100%";
+        videoContainer.style.maxWidth = "400px";
+        videoContainer.style.paddingBottom = `${(1 / aspectRatio) * 100}%`;
+      }
     }
   }
 }
@@ -744,12 +760,13 @@ function startCamera() {
     // Stop any existing stream
     stopCamera();
 
-    // Get constraints based on device
+    // Get constraints based on device and step
     const constraints = {
       video: {
         facingMode: isMobile() ? "environment" : "user",
-        width: { ideal: 1280 },
-        height: { ideal: 720 },
+        width: { ideal: 1920 }, // Aumentado para melhor qualidade
+        height: { ideal: 2560 }, // Proporção mais adequada para A4
+        aspectRatio: { ideal: 0.7071 }, // Proporção aproximada do A4 (1/√2)
       },
     };
 
@@ -761,7 +778,7 @@ function startCamera() {
         qrVideo.srcObject = stream;
         qrVideo.play();
 
-        // Adjust camera display
+        // Ajusta o tamanho do container de vídeo baseado na etapa atual
         adjustCamera();
       })
       .catch((err) => {
@@ -899,3 +916,32 @@ async function simulateQRScan() {
 
 // Initialize application when DOM is ready
 document.addEventListener("DOMContentLoaded", init);
+
+// Atualizar o CSS para o container de vídeo
+const style = document.createElement("style");
+style.textContent = `
+  .video-container {
+    position: relative;
+    margin: 0 auto;
+    background: black;
+    overflow: hidden;
+    border-radius: 8px;
+  }
+
+  .video-container video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  @media (max-width: 768px) {
+    .video-container {
+      width: 100% !important;
+      max-width: none !important;
+    }
+  }
+`;
+document.head.appendChild(style);
