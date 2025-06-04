@@ -788,7 +788,6 @@ function isMobile() {
 // Simulated QR code scanning (in a real app, this would use a QR code library)
 async function simulateQRScan() {
   if (!cameraStream) return;
-  // Generate simulated QR code data based on the current step
 
   if (currentCorrection.step === 1) {
     const canvas = document.createElement("canvas");
@@ -829,7 +828,7 @@ async function simulateQRScan() {
         alert("Erro ao processar a imagem.");
       }
     }, "image/png");
-  } else {
+  } else if (currentCorrection.step === 2) {
     const canvas = document.createElement("canvas");
     const context = canvas.getContext("2d");
 
@@ -841,23 +840,21 @@ async function simulateQRScan() {
     context.drawImage(qrVideo, 0, 0, canvas.width, canvas.height);
 
     // Converte o canvas para blob (imagem PNG)
-    const imagePath = "teste2.jpg";
-    const response = await fetch(imagePath);
-    const blob1 = await response.blob();
     canvas.toBlob(async function (blob) {
       if (!blob) {
         alert("Erro ao capturar imagem.");
         return;
       }
 
-      // Prepara os dados para envio
+      // Prepara os dados para envio exatamente como no exemplo Python
       const formData = new FormData();
+      // Equivalente a files={'imagem': img}
       formData.append("imagem", blob, "captura.png");
-
-      // Adiciona o número de questões
-      console.log(currentCorrection.totalQuestoes);
-      const numeroQuestoes = currentCorrection.totalQuestoes || "N/A"; // Obtém o número de questões
-      formData.append("numero_questoes", numeroQuestoes);
+      // Equivalente a data={'numero_questoes': str(numero_questoes)}
+      formData.append(
+        "numero_questoes",
+        String(currentCorrection.totalQuestoes || "")
+      );
 
       try {
         // Realiza a requisição POST para a API
@@ -871,16 +868,13 @@ async function simulateQRScan() {
 
         const result = await response.json();
         console.log("Resposta da API:", result);
-
-        // Chama a função para processar a resposta do QR code
         handleQRCodeDetection(result);
       } catch (error) {
+        console.error("Erro ao enviar imagem para a API:", error);
         alert("Erro ao processar a imagem.");
       }
     }, "image/png");
   }
-
-  // Process the simulated QR code data
 }
 
 // Initialize application when DOM is ready
