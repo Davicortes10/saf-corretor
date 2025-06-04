@@ -549,7 +549,6 @@ function completeCorrection() {
       escola: currentCorrection.aluno.nome_da_escola,
       turma: currentCorrection.aluno.nome_da_turma,
       gabarito: formatGabarito(currentCorrection.gabarito),
-      nota: currentCorrection.gabarito.nota || 0,
       timestamp: new Date(),
       status: "Corrigido",
     };
@@ -563,25 +562,27 @@ function completeCorrection() {
     resetCorrection();
 
     // Feedback
-    alert(`Correção finalizada com sucesso! Nota: ${newCorrecao.nota}`);
+    alert("Correção finalizada com sucesso!");
   }
 }
 
 // Format gabarito for display
 function formatGabarito(gabarito) {
   // Create a simple summary of the gabarito responses
-  if (!gabarito || !gabarito.respostas) return "N/A";
-
-  // Get the answers as an array
-  const respostas = Object.entries(gabarito.respostas);
-
-  // If there are too many, just show the count
-  if (respostas.length > 5) {
-    return `${respostas.length} respostas`;
+  if (!gabarito || !gabarito.respostas) {
+    console.log("Gabarito inválido:", gabarito);
+    return "N/A";
   }
 
-  // Otherwise, format them nicely
-  return respostas.map(([q, resp]) => `${q}:${resp}`).join(", ");
+  // Get the answers as an array
+  const respostas = gabarito.respostas;
+
+  // Format each answer as "Q1: A, Q2: B, etc"
+  const formattedAnswers = Object.entries(respostas)
+    .map(([questao, resposta]) => `Q${questao}: ${resposta}`)
+    .join(", ");
+
+  return formattedAnswers || "N/A";
 }
 
 // Process QR code data from step 1 (aluno data)
@@ -643,11 +644,8 @@ function processGabaritoQRData(data) {
     // Log the response for debugging
     console.log("Dados do gabarito recebidos:", parsedData);
 
-    // Save the gabarito data including the nota
-    currentCorrection.gabarito = {
-      ...parsedData,
-      nota: parsedData.nota || parsedData.pontuacao || 0,
-    };
+    // Save the gabarito data
+    currentCorrection.gabarito = parsedData;
 
     // Show the complete correction button
     completeCorrecaoBtn.classList.remove("hidden");
@@ -707,9 +705,6 @@ function renderCorrecoes() {
             <td class="py-2 px-4 border-b">${correcao.escola}</td>
             <td class="py-2 px-4 border-b">${correcao.turma}</td>
             <td class="py-2 px-4 border-b">${correcao.gabarito}</td>
-            <td class="py-2 px-4 border-b">${
-              correcao.nota !== undefined ? correcao.nota : "N/A"
-            }</td>
             <td class="py-2 px-4 border-b">
                 <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
                     ${correcao.status}
@@ -724,7 +719,7 @@ function renderCorrecoes() {
   if (CORRECOES.length === 0) {
     const tr = document.createElement("tr");
     tr.innerHTML = `
-            <td colspan="6" class="py-4 px-4 text-center text-gray-500">
+            <td colspan="5" class="py-4 px-4 text-center text-gray-500">
                 Nenhuma correção realizada ainda
             </td>
         `;
