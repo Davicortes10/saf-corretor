@@ -471,6 +471,57 @@ function goToNextStep() {
       "Posicione o QR code com as respostas do gabarito na câmera";
     stepIndicator.textContent = "Etapa 2/2";
 
+    // Adiciona os pontos de marcação para a etapa 2
+    const videoContainer = qrVideo.parentElement;
+    videoContainer.innerHTML = `
+      <div class="alignment-overlay">
+        <div class="corner-dot top-left"></div>
+        <div class="corner-dot top-right"></div>
+        <div class="corner-dot bottom-left"></div>
+        <div class="corner-dot bottom-right"></div>
+      </div>
+      ${videoContainer.innerHTML}
+    `;
+
+    // Adiciona o estilo para os pontos de marcação
+    const style = document.createElement("style");
+    style.textContent = `
+      .alignment-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 10;
+        pointer-events: none;
+      }
+      .corner-dot {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: rgba(255, 0, 0, 0.7);
+        border: 2px solid white;
+      }
+      .top-left {
+        top: 10%;
+        left: 10%;
+      }
+      .top-right {
+        top: 10%;
+        right: 10%;
+      }
+      .bottom-left {
+        bottom: 10%;
+        left: 10%;
+      }
+      .bottom-right {
+        bottom: 10%;
+        right: 10%;
+      }
+    `;
+    document.head.appendChild(style);
+
     // Hide next button, show complete button
     nextStepBtn.classList.remove("hidden");
 
