@@ -851,17 +851,26 @@ async function simulateQRScan() {
         return;
       }
 
-      // Prepara os dados para envio exatamente como no exemplo Python
+      // Prepara os dados para envio
       const formData = new FormData();
-      // Equivalente a files={'imagem': img}
-      formData.append("imagem", blob, "captura.png");
-      // Equivalente a data={'numero_questoes': str(numero_questoes)}
+
+      // Adiciona a imagem como um arquivo
+      const file = new File([blob], "captura.png", { type: "image/png" });
+      formData.append("imagem", file);
+
+      // Adiciona o número de questões como string
       formData.append(
         "numero_questoes",
         String(currentCorrection.totalQuestoes || "")
       );
 
       try {
+        // Adiciona um alert para ver os dados sendo enviados
+        alert(
+          "Enviando número de questões: " +
+            String(currentCorrection.totalQuestoes || "")
+        );
+
         // Realiza a requisição POST para a API
         const response = await fetch(
           "https://gerador-gabarito-leitor-gabarito.lh6c5d.easypanel.host/api/leitor/",
@@ -871,12 +880,18 @@ async function simulateQRScan() {
           }
         );
 
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const result = await response.json();
-        console.log("Resposta da API:", result);
+
+        // Adiciona um alert para ver a resposta da API
+        alert("Resposta da API: " + JSON.stringify(result));
+
         handleQRCodeDetection(result);
       } catch (error) {
-        console.error("Erro ao enviar imagem para a API:", error);
-        alert("Erro ao processar a imagem.");
+        alert("Erro ao enviar para API: " + error.message);
       }
     }, "image/png");
   }
