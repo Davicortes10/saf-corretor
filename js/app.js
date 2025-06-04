@@ -542,8 +542,6 @@ function completeCorrection() {
     currentCorrection.aluno &&
     currentCorrection.gabarito
   ) {
-    alert(JSON.stringify(currentCorrection.gabarito));
-
     // Add to corrected items
     const newCorrecao = {
       id: CORRECOES.length + 1,
@@ -551,6 +549,7 @@ function completeCorrection() {
       escola: currentCorrection.aluno.nome_da_escola,
       turma: currentCorrection.aluno.nome_da_turma,
       gabarito: formatGabarito(currentCorrection.gabarito),
+      nota: currentCorrection.gabarito.nota || 0,
       timestamp: new Date(),
       status: "Corrigido",
     };
@@ -564,7 +563,7 @@ function completeCorrection() {
     resetCorrection();
 
     // Feedback
-    alert("Correção finalizada com sucesso!");
+    alert(`Correção finalizada com sucesso! Nota: ${newCorrecao.nota}`);
   }
 }
 
@@ -631,26 +630,24 @@ function processAlunoQRData(data) {
 // Process QR code data from step 2 (gabarito data)
 function processGabaritoQRData(data) {
   try {
-    // In a real app, this would parse the QR code data properly
-    // Here we're simulating with some sample data
-
-    // Try to parse the JSON
+    // Try to parse the JSON if it's a string
     let parsedData;
     try {
-      parsedData = JSON.parse(data);
+      parsedData = typeof data === "string" ? JSON.parse(data) : data;
     } catch (e) {
-      // If not valid JSON, create a sample response object
-      const respostas = {};
-      const options = ["A", "B", "C", "D"];
-
-      parsedData = {
-        prova: "Avaliação Bimestral",
-        respostas: respostas,
-      };
+      console.error("Erro ao fazer parse do JSON:", e);
+      alert("Erro ao processar dados do gabarito");
+      return false;
     }
 
-    // Save the gabarito data
-    currentCorrection.gabarito = parsedData;
+    // Log the response for debugging
+    console.log("Dados do gabarito recebidos:", parsedData);
+
+    // Save the gabarito data including the nota
+    currentCorrection.gabarito = {
+      ...parsedData,
+      nota: parsedData.nota || parsedData.pontuacao || 0,
+    };
 
     // Show the complete correction button
     completeCorrecaoBtn.classList.remove("hidden");
@@ -710,6 +707,9 @@ function renderCorrecoes() {
             <td class="py-2 px-4 border-b">${correcao.escola}</td>
             <td class="py-2 px-4 border-b">${correcao.turma}</td>
             <td class="py-2 px-4 border-b">${correcao.gabarito}</td>
+            <td class="py-2 px-4 border-b">${
+              correcao.nota !== undefined ? correcao.nota : "N/A"
+            }</td>
             <td class="py-2 px-4 border-b">
                 <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
                     ${correcao.status}
@@ -724,7 +724,7 @@ function renderCorrecoes() {
   if (CORRECOES.length === 0) {
     const tr = document.createElement("tr");
     tr.innerHTML = `
-            <td colspan="5" class="py-4 px-4 text-center text-gray-500">
+            <td colspan="6" class="py-4 px-4 text-center text-gray-500">
                 Nenhuma correção realizada ainda
             </td>
         `;

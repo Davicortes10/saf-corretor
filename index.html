@@ -1,231 +1,299 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SAG Corretor</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: {
-                            50: '#f5f3ff',
-                            100: '#ede9fe',
-                            200: '#ddd6fe',
-                            300: '#c4b5fd',
-                            400: '#a78bfa',
-                            500: '#8b5cf6',
-                            600: '#7c3aed',
-                            700: '#6d28d9',
-                            800: '#5b21b6',
-                            900: '#4c1d95',
-                        },
-                    }
-                }
-            }
-        }
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                50: "#f5f3ff",
+                100: "#ede9fe",
+                200: "#ddd6fe",
+                300: "#c4b5fd",
+                400: "#a78bfa",
+                500: "#8b5cf6",
+                600: "#7c3aed",
+                700: "#6d28d9",
+                800: "#5b21b6",
+                900: "#4c1d95",
+              },
+            },
+          },
+        },
+      };
     </script>
     <!-- Bibliotecas para gerar documentos e ZIP -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://unpkg.com/docx@8.2.2/build/index.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
     <style>
-        .page-transition {
-            transition: opacity 0.3s ease, transform 0.3s ease;
+      .page-transition {
+        transition: opacity 0.3s ease, transform 0.3s ease;
+      }
+
+      /* Custom scrollbar for tables */
+      @media (max-width: 640px) {
+        .table-responsive {
+          display: block;
+          width: 100%;
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
         }
-        
-        /* Custom scrollbar for tables */
-        @media (max-width: 640px) {
-            .table-responsive {
-                display: block;
-                width: 100%;
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-            }
+      }
+
+      /* Fix video aspect ratio on mobile */
+      .video-container {
+        position: relative;
+        width: 100%;
+        height: 0;
+        padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+        overflow: hidden;
+      }
+
+      .video-container video {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      /* Ensure inputs are properly sized on mobile */
+      input,
+      select,
+      button {
+        touch-action: manipulation;
+      }
+
+      /* Fix for iOS button styling */
+      button {
+        -webkit-appearance: none;
+        border-radius: 0.375rem;
+      }
+
+      /* Sidebar overlay for mobile */
+      .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 20;
+        transition: opacity 0.3s ease;
+      }
+
+      @media (max-width: 768px) {
+        .sidebar-overlay.active {
+          display: block;
         }
-        
-        /* Fix video aspect ratio on mobile */
-        .video-container {
-            position: relative;
-            width: 100%;
-            height: 0;
-            padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
-            overflow: hidden;
+      }
+
+      /* Fix iOS touch issues */
+      @supports (-webkit-touch-callout: none) {
+        .h-screen {
+          height: -webkit-fill-available;
         }
-        
-        .video-container video {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        
-        /* Ensure inputs are properly sized on mobile */
-        input, select, button {
-            touch-action: manipulation;
-        }
-        
-        /* Fix for iOS button styling */
-        button {
-            -webkit-appearance: none;
-            border-radius: 0.375rem;
-        }
-        
-        /* Sidebar overlay for mobile */
-        .sidebar-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 20;
-            transition: opacity 0.3s ease;
-        }
-        
-        @media (max-width: 768px) {
-            .sidebar-overlay.active {
-                display: block;
-            }
-        }
-        
-        /* Fix iOS touch issues */
-        @supports (-webkit-touch-callout: none) {
-            .h-screen {
-                height: -webkit-fill-available;
-            }
-        }
+      }
     </style>
-</head>
-<body class="bg-gray-50 min-h-screen">
+  </head>
+  <body class="bg-gray-50 min-h-screen">
     <div id="login-page" class="page-transition">
-        <div class="min-h-screen flex items-center justify-center px-4">
-            <div class="bg-white p-6 sm:p-8 rounded-lg shadow-md w-full max-w-md">
-                <div class="text-center mb-6">
-                    <h1 class="text-2xl font-bold text-primary-700">SAG Corretor</h1>
-                    <p class="text-gray-600">Entre com suas credenciais</p>
-                </div>
-                <div class="space-y-4">
-                    <div>
-                        <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Usuário</label>
-                        <input type="text" id="username" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="Email ou nome de usuário">
-                    </div>
-                    <div>
-                        <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Senha</label>
-                        <input type="password" id="password" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="Sua senha">
-                    </div>
-                    <button id="login-btn" class="w-full bg-primary-600 text-white py-2 px-4 rounded-md hover:bg-primary-700 transition duration-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">
-                        Entrar
-                    </button>
-                </div>
+      <div class="min-h-screen flex items-center justify-center px-4">
+        <div class="bg-white p-6 sm:p-8 rounded-lg shadow-md w-full max-w-md">
+          <div class="text-center mb-6">
+            <h1 class="text-2xl font-bold text-primary-700">SAG Corretor</h1>
+            <p class="text-gray-600">Entre com suas credenciais</p>
+          </div>
+          <div class="space-y-4">
+            <div>
+              <label
+                for="username"
+                class="block text-sm font-medium text-gray-700 mb-1"
+                >Usuário</label
+              >
+              <input
+                type="text"
+                id="username"
+                class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                placeholder="Email ou nome de usuário"
+              />
             </div>
+            <div>
+              <label
+                for="password"
+                class="block text-sm font-medium text-gray-700 mb-1"
+                >Senha</label
+              >
+              <input
+                type="password"
+                id="password"
+                class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                placeholder="Sua senha"
+              />
+            </div>
+            <button
+              id="login-btn"
+              class="w-full bg-primary-600 text-white py-2 px-4 rounded-md hover:bg-primary-700 transition duration-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+            >
+              Entrar
+            </button>
+          </div>
         </div>
+      </div>
     </div>
 
     <div id="app" class="hidden page-transition">
-        <!-- Sidebar overlay for mobile -->
-        <div id="sidebar-overlay" class="sidebar-overlay"></div>
-        
-        <!-- Sidebar -->
-        <div class="flex h-screen overflow-hidden">
-            <div id="sidebar" class="bg-primary-800 text-white w-64 flex-shrink-0 transition-all duration-300 fixed inset-y-0 left-0 z-30 transform -translate-x-full md:translate-x-0 md:relative md:inset-0 rounded-r-2xl shadow-lg">
-                <div class="p-4 flex justify-between items-center">
-                    <h2 class="text-xl font-bold">SAG Corretor</h2>
-                    <button id="close-sidebar" class="md:hidden text-white focus:outline-none">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="border-t border-primary-700"></div>
-                <div class="p-4">
-                    <div class="text-sm text-primary-300 mb-2">Olá, <span id="user-name">Usuário</span></div>
-                </div>
-                <nav class="mt-4">
-                    <ul>
-                        <li id="nav-correcao" class="nav-item mb-1">
-                            <a href="#" class="block py-2 px-4 hover:bg-primary-700 transition duration-200 rounded-lg">
-                                <i class="fas fa-camera mr-2"></i>
-                                Correção
-                            </a>
-                        </li>
-                        <li id="nav-usuarios" class="nav-item mb-1 admin-only hidden">
-                            <a href="#" class="block py-2 px-4 hover:bg-primary-700 transition duration-200 rounded-lg">
-                                <i class="fas fa-users mr-2"></i>
-                                Usuários
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
-                <div class="absolute bottom-0 w-full p-4 border-t border-primary-700">
-                    <button id="logout-btn" class="flex items-center text-sm text-primary-300 hover:text-white">
-                        <i class="fas fa-sign-out-alt mr-2"></i> Sair
-                    </button>
-                </div>
+      <!-- Sidebar overlay for mobile -->
+      <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+      <!-- Sidebar -->
+      <div class="flex h-screen overflow-hidden">
+        <div
+          id="sidebar"
+          class="bg-primary-800 text-white w-64 flex-shrink-0 transition-all duration-300 fixed inset-y-0 left-0 z-30 transform -translate-x-full md:translate-x-0 md:relative md:inset-0 rounded-r-2xl shadow-lg"
+        >
+          <div class="p-4 flex justify-between items-center">
+            <h2 class="text-xl font-bold">SAG Corretor</h2>
+            <button
+              id="close-sidebar"
+              class="md:hidden text-white focus:outline-none"
+            >
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div class="border-t border-primary-700"></div>
+          <div class="p-4">
+            <div class="text-sm text-primary-300 mb-2">
+              Olá, <span id="user-name">Usuário</span>
             </div>
+          </div>
+          <nav class="mt-4">
+            <ul>
+              <li id="nav-correcao" class="nav-item mb-1">
+                <a
+                  href="#"
+                  class="block py-2 px-4 hover:bg-primary-700 transition duration-200 rounded-lg"
+                >
+                  <i class="fas fa-camera mr-2"></i>
+                  Correção
+                </a>
+              </li>
+              <li id="nav-usuarios" class="nav-item mb-1 admin-only hidden">
+                <a
+                  href="#"
+                  class="block py-2 px-4 hover:bg-primary-700 transition duration-200 rounded-lg"
+                >
+                  <i class="fas fa-users mr-2"></i>
+                  Usuários
+                </a>
+              </li>
+            </ul>
+          </nav>
+          <div class="absolute bottom-0 w-full p-4 border-t border-primary-700">
+            <button
+              id="logout-btn"
+              class="flex items-center text-sm text-primary-300 hover:text-white"
+            >
+              <i class="fas fa-sign-out-alt mr-2"></i> Sair
+            </button>
+          </div>
+        </div>
 
-            <!-- Main Content -->
-            <div class="flex-1 flex flex-col overflow-hidden w-full md:w-[calc(100%-16rem)]">
-                <header class="bg-white shadow-sm z-10">
-                    <div class="py-3 px-4 flex items-center justify-between">
-                        <button id="open-sidebar" class="md:hidden text-gray-700 focus:outline-none">
-                            <i class="fas fa-bars"></i>
-                        </button>
-                        <h2 id="page-title" class="text-lg font-medium">Correção</h2>
-                        <div class="flex items-center">
-                            <div id="user-avatar" class="w-8 h-8 rounded-full bg-primary-600 text-white flex items-center justify-center font-medium text-sm">
-                                AD
-                            </div>
-                        </div>
+        <!-- Main Content -->
+        <div
+          class="flex-1 flex flex-col overflow-hidden w-full md:w-[calc(100%-16rem)]"
+        >
+          <header class="bg-white shadow-sm z-10">
+            <div class="py-3 px-4 flex items-center justify-between">
+              <button
+                id="open-sidebar"
+                class="md:hidden text-gray-700 focus:outline-none"
+              >
+                <i class="fas fa-bars"></i>
+              </button>
+              <h2 id="page-title" class="text-lg font-medium">Correção</h2>
+              <div class="flex items-center">
+                <div
+                  id="user-avatar"
+                  class="w-8 h-8 rounded-full bg-primary-600 text-white flex items-center justify-center font-medium text-sm"
+                >
+                  AD
+                </div>
+              </div>
+            </div>
+          </header>
+
+          <main
+            class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 pb-12"
+          >
+            <!-- Correção Page -->
+            <div id="page-correcao" class="page p-3 sm:p-4">
+              <div class="bg-white rounded-lg shadow-md p-3 sm:p-4 mb-4">
+                <h3 class="text-lg font-medium mb-4">
+                  Correção em Duas Etapas
+                </h3>
+
+                <!-- Etapa de leitura atual -->
+                <div class="bg-primary-50 p-3 sm:p-4 rounded-lg mb-4">
+                  <div
+                    class="flex flex-col sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div class="mb-2 sm:mb-0">
+                      <h4 class="font-medium text-primary-800">
+                        <span id="scan-step-text"
+                          >Etapa 1: Escaneie o QR Code do Aluno</span
+                        >
+                      </h4>
+                      <p
+                        class="text-sm text-primary-600 mt-1"
+                        id="scan-instruction"
+                      >
+                        Posicione o QR code com os dados do aluno na câmera
+                      </p>
                     </div>
-                </header>
+                    <div class="mt-2 sm:mt-0">
+                      <span
+                        id="step-indicator"
+                        class="px-3 py-1 bg-primary-100 text-primary-800 rounded-full font-medium text-sm"
+                      >
+                        Etapa 1/2
+                      </span>
+                    </div>
+                  </div>
+                </div>
 
-                <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 pb-12">
-                    <!-- Correção Page -->
-                    <div id="page-correcao" class="page p-3 sm:p-4">
-                        <div class="bg-white rounded-lg shadow-md p-3 sm:p-4 mb-4">
-                            <h3 class="text-lg font-medium mb-4">Correção em Duas Etapas</h3>
-                            
-                            <!-- Etapa de leitura atual -->
-                            <div class="bg-primary-50 p-3 sm:p-4 rounded-lg mb-4">
-                                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                                    <div class="mb-2 sm:mb-0">
-                                        <h4 class="font-medium text-primary-800">
-                                            <span id="scan-step-text">Etapa 1: Escaneie o QR Code do Aluno</span>
-                                        </h4>
-                                        <p class="text-sm text-primary-600 mt-1" id="scan-instruction">
-                                            Posicione o QR code com os dados do aluno na câmera
-                                        </p>
-                                    </div>
-                                    <div class="mt-2 sm:mt-0">
-                                        <span id="step-indicator" class="px-3 py-1 bg-primary-100 text-primary-800 rounded-full font-medium text-sm">
-                                            Etapa 1/2
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Dados do aluno (visível após primeira leitura) -->
-                            <div id="aluno-info" class="bg-gray-50 rounded-lg p-3 sm:p-4 mb-4 hidden">
-                                <h4 class="font-medium mb-2">Dados do Aluno</h4>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                                    <div>
-                                        <p class="text-sm text-gray-500">Nome:</p>
-                                        <p id="aluno-nome" class="font-medium">-</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-sm text-gray-500">Escola:</p>
-                                        <p id="escola-nome" class="font-medium">-</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-sm text-gray-500">Turma:</p>
-                                        <p id="turma-nome" class="font-medium">-</p>
-                                    </div>
-                                    <!-- <div>
+                <!-- Dados do aluno (visível após primeira leitura) -->
+                <div
+                  id="aluno-info"
+                  class="bg-gray-50 rounded-lg p-3 sm:p-4 mb-4 hidden"
+                >
+                  <h4 class="font-medium mb-2">Dados do Aluno</h4>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div>
+                      <p class="text-sm text-gray-500">Nome:</p>
+                      <p id="aluno-nome" class="font-medium">-</p>
+                    </div>
+                    <div>
+                      <p class="text-sm text-gray-500">Escola:</p>
+                      <p id="escola-nome" class="font-medium">-</p>
+                    </div>
+                    <div>
+                      <p class="text-sm text-gray-500">Turma:</p>
+                      <p id="turma-nome" class="font-medium">-</p>
+                    </div>
+                    <!-- <div>
                                         <p class="text-sm text-gray-500">Série:</p>
                                         <p id="turma-serie" class="font-medium">-</p>
                                     </div>
@@ -233,129 +301,197 @@
                                         <p class="text-sm text-gray-500">Turno:</p>
                                         <p id="turma-turno" class="font-medium">-</p>
                                     </div> -->
-                                    <div>
-                                        <p class="text-sm text-gray-500">Total Questões:</p>
-                                        <p id="total-questoes" class="font-medium">-</p>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Vídeo da câmera -->
-                            <div class="video-container mb-4 rounded-lg overflow-hidden bg-black mx-auto sm:max-w-md">
-                                <video id="qr-video"></video>
-                            </div>
-                            
-                            <div class="flex flex-col sm:flex-row sm:justify-between gap-2 mb-4">
-                                <button id="reset-scan" class="bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300 transition duration-300 w-full sm:w-auto order-2 sm:order-1">
-                                    <i class="fas fa-redo mr-2"></i> Reiniciar
-                                </button>
-
-                                <button id="start-camera" class="bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 transition duration-300">
-                                    Ativar Câmera <i class="fas fa-video ml-2"></i>
-                                </button>
-                            
-                                <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto order-1 sm:order-2">
-                                    <button id="next-step" class="bg-primary-600 text-white py-2 px-4 rounded-md hover:bg-primary-700 transition duration-300 w-full sm:w-auto hidden">
-                                        Próxima Etapa <i class="fas fa-arrow-right ml-2"></i>
-                                    </button>
-                            
-                                    <button id="complete-correction" class="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition duration-300 w-full sm:w-auto hidden">
-                                        Finalizar Correção <i class="fas fa-check ml-2"></i>
-                                    </button>
-                            
-                                    <!-- ✅ Botão para tirar foto e enviar -->
-                                    <button id="take-photo" class="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-300 w-full sm:w-auto">
-                                        Tirar Foto <i class="fas fa-camera ml-2"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            
-                            
-                            <!-- Resultados das correções -->
-                            <h3 class="text-lg font-medium mb-2">Correções Realizadas</h3>
-                            <div class="overflow-x-auto table-responsive">
-                                <table class="min-w-full bg-white">
-                                    <thead>
-                                        <tr>
-                                            <th class="py-2 px-4 border-b text-left">Aluno</th>
-                                            <th class="py-2 px-4 border-b text-left">Escola</th>
-                                            <th class="py-2 px-4 border-b text-left">Turma</th>
-                                            <th class="py-2 px-4 border-b text-left">Gabarito</th>
-                                            <th class="py-2 px-4 border-b text-left">Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="qr-results">
-                                        <!-- QR code results will be added here -->
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+                    <div>
+                      <p class="text-sm text-gray-500">Total Questões:</p>
+                      <p id="total-questoes" class="font-medium">-</p>
                     </div>
+                  </div>
+                </div>
 
-                    <!-- Usuários Page -->
-                    <div id="page-usuarios" class="page hidden p-3 sm:p-4">
-                        <div class="bg-white rounded-lg shadow-md p-3 sm:p-4 mb-4">
-                            <h3 class="text-lg font-medium mb-4">Gerenciamento de Usuários</h3>
-                            <div class="mb-4">
-                                <button id="add-user-btn" class="bg-primary-600 text-white py-2 px-4 rounded-md hover:bg-primary-700 transition duration-300">
-                                    <i class="fas fa-plus mr-2"></i> Adicionar Usuário
-                                </button>
-                            </div>
-                            <div id="add-user-form" class="hidden bg-gray-50 p-3 sm:p-4 rounded-lg mb-4">
-                                <h4 class="text-md font-medium mb-3">Novo Usuário</h4>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mb-4">
-                                    <div>
-                                        <label for="new-name" class="block text-sm font-medium text-gray-700 mb-1">Nome</label>
-                                        <input type="text" id="new-name" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                                    </div>
-                                    <div>
-                                        <label for="new-login" class="block text-sm font-medium text-gray-700 mb-1">Login</label>
-                                        <input type="text" id="new-login" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                                    </div>
-                                    <div>
-                                        <label for="new-password" class="block text-sm font-medium text-gray-700 mb-1">Senha</label>
-                                        <input type="password" id="new-password" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                                    </div>
-                                    <div>
-                                        <label for="new-type" class="block text-sm font-medium text-gray-700 mb-1">Perfil</label>
-                                        <select id="new-type" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                                            <option value="administrador">Administrador</option>
-                                            <option value="professor">Professor</option>
-                                            <option value="corretor">Corretor</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="flex flex-col sm:flex-row sm:justify-end gap-2">
-                                    <button id="cancel-add-user" class="bg-gray-300 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-400 transition duration-300 order-2 sm:order-1">
-                                        Cancelar
-                                    </button>
-                                    <button id="save-user" class="bg-primary-600 text-white py-2 px-4 rounded-md hover:bg-primary-700 transition duration-300 order-1 sm:order-2">
-                                        Salvar
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="overflow-x-auto table-responsive">
-                                <table class="min-w-full bg-white">
-                                    <thead>
-                                        <tr>
-                                            <th class="py-2 px-4 border-b text-left">Nome</th>
-                                            <th class="py-2 px-4 border-b text-left">Login</th>
-                                            <th class="py-2 px-4 border-b text-left">Perfil</th>
-                                            <th class="py-2 px-4 border-b text-left">Ações</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="users-list">
-                                        <!-- Users will be added here -->
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </main>
+                <!-- Vídeo da câmera -->
+                <div
+                  class="video-container mb-4 rounded-lg overflow-hidden bg-black mx-auto sm:max-w-md"
+                >
+                  <video id="qr-video"></video>
+                </div>
+
+                <div
+                  class="flex flex-col sm:flex-row sm:justify-between gap-2 mb-4"
+                >
+                  <button
+                    id="reset-scan"
+                    class="bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300 transition duration-300 w-full sm:w-auto order-2 sm:order-1"
+                  >
+                    <i class="fas fa-redo mr-2"></i> Reiniciar
+                  </button>
+
+                  <button
+                    id="start-camera"
+                    class="bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 transition duration-300"
+                  >
+                    Ativar Câmera <i class="fas fa-video ml-2"></i>
+                  </button>
+
+                  <div
+                    class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto order-1 sm:order-2"
+                  >
+                    <button
+                      id="next-step"
+                      class="bg-primary-600 text-white py-2 px-4 rounded-md hover:bg-primary-700 transition duration-300 w-full sm:w-auto hidden"
+                    >
+                      Próxima Etapa <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+
+                    <button
+                      id="complete-correction"
+                      class="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition duration-300 w-full sm:w-auto hidden"
+                    >
+                      Finalizar Correção <i class="fas fa-check ml-2"></i>
+                    </button>
+
+                    <!-- ✅ Botão para tirar foto e enviar -->
+                    <button
+                      id="take-photo"
+                      class="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-300 w-full sm:w-auto"
+                    >
+                      Tirar Foto <i class="fas fa-camera ml-2"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Resultados das correções -->
+                <h3 class="text-lg font-medium mb-2">Correções Realizadas</h3>
+                <div class="overflow-x-auto table-responsive">
+                  <table class="min-w-full bg-white">
+                    <thead>
+                      <tr>
+                        <th class="py-2 px-4 border-b text-left">Aluno</th>
+                        <th class="py-2 px-4 border-b text-left">Escola</th>
+                        <th class="py-2 px-4 border-b text-left">Turma</th>
+                        <th class="py-2 px-4 border-b text-left">Gabarito</th>
+                        <th class="py-2 px-4 border-b text-left">Nota</th>
+                        <th class="py-2 px-4 border-b text-left">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody id="qr-results">
+                      <!-- QR code results will be added here -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
+
+            <!-- Usuários Page -->
+            <div id="page-usuarios" class="page hidden p-3 sm:p-4">
+              <div class="bg-white rounded-lg shadow-md p-3 sm:p-4 mb-4">
+                <h3 class="text-lg font-medium mb-4">
+                  Gerenciamento de Usuários
+                </h3>
+                <div class="mb-4">
+                  <button
+                    id="add-user-btn"
+                    class="bg-primary-600 text-white py-2 px-4 rounded-md hover:bg-primary-700 transition duration-300"
+                  >
+                    <i class="fas fa-plus mr-2"></i> Adicionar Usuário
+                  </button>
+                </div>
+                <div
+                  id="add-user-form"
+                  class="hidden bg-gray-50 p-3 sm:p-4 rounded-lg mb-4"
+                >
+                  <h4 class="text-md font-medium mb-3">Novo Usuário</h4>
+                  <div
+                    class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mb-4"
+                  >
+                    <div>
+                      <label
+                        for="new-name"
+                        class="block text-sm font-medium text-gray-700 mb-1"
+                        >Nome</label
+                      >
+                      <input
+                        type="text"
+                        id="new-name"
+                        class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        for="new-login"
+                        class="block text-sm font-medium text-gray-700 mb-1"
+                        >Login</label
+                      >
+                      <input
+                        type="text"
+                        id="new-login"
+                        class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        for="new-password"
+                        class="block text-sm font-medium text-gray-700 mb-1"
+                        >Senha</label
+                      >
+                      <input
+                        type="password"
+                        id="new-password"
+                        class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        for="new-type"
+                        class="block text-sm font-medium text-gray-700 mb-1"
+                        >Perfil</label
+                      >
+                      <select
+                        id="new-type"
+                        class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                      >
+                        <option value="administrador">Administrador</option>
+                        <option value="professor">Professor</option>
+                        <option value="corretor">Corretor</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="flex flex-col sm:flex-row sm:justify-end gap-2">
+                    <button
+                      id="cancel-add-user"
+                      class="bg-gray-300 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-400 transition duration-300 order-2 sm:order-1"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      id="save-user"
+                      class="bg-primary-600 text-white py-2 px-4 rounded-md hover:bg-primary-700 transition duration-300 order-1 sm:order-2"
+                    >
+                      Salvar
+                    </button>
+                  </div>
+                </div>
+                <div class="overflow-x-auto table-responsive">
+                  <table class="min-w-full bg-white">
+                    <thead>
+                      <tr>
+                        <th class="py-2 px-4 border-b text-left">Nome</th>
+                        <th class="py-2 px-4 border-b text-left">Login</th>
+                        <th class="py-2 px-4 border-b text-left">Perfil</th>
+                        <th class="py-2 px-4 border-b text-left">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody id="users-list">
+                      <!-- Users will be added here -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </main>
         </div>
+      </div>
     </div>
 
     <script src="js/app.js"></script>
-</body>
-</html> 
+  </body>
+</html>
