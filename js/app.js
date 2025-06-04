@@ -570,12 +570,15 @@ function completeCorrection() {
 function formatGabarito(gabarito) {
   // Create a simple summary of the gabarito responses
   if (!gabarito || !gabarito.respostas) {
-    console.log("Gabarito inválido:", gabarito);
+    alert("Gabarito inválido: " + JSON.stringify(gabarito));
     return "N/A";
   }
 
   // Get the answers as an array
   const respostas = gabarito.respostas;
+
+  // Alert para ver o formato das respostas
+  alert("Formatando respostas: " + JSON.stringify(respostas));
 
   // Format each answer as "Q1: A, Q2: B, etc"
   const formattedAnswers = Object.entries(respostas)
@@ -631,21 +634,29 @@ function processAlunoQRData(data) {
 // Process QR code data from step 2 (gabarito data)
 function processGabaritoQRData(data) {
   try {
+    // Alert dos dados brutos recebidos
+    alert("Dados brutos recebidos: " + JSON.stringify(data));
+
     // Try to parse the JSON if it's a string
     let parsedData;
     try {
       parsedData = typeof data === "string" ? JSON.parse(data) : data;
+      // Alert dos dados após o parse
+      alert("Dados após parse: " + JSON.stringify(parsedData));
     } catch (e) {
-      console.error("Erro ao fazer parse do JSON:", e);
-      alert("Erro ao processar dados do gabarito");
+      alert("Erro ao fazer parse do JSON: " + e.message);
       return false;
     }
 
-    // Log the response for debugging
-    console.log("Dados do gabarito recebidos:", parsedData);
-
     // Save the gabarito data
     currentCorrection.gabarito = parsedData;
+
+    // Alert do formato das respostas
+    if (parsedData.respostas) {
+      alert("Respostas encontradas: " + JSON.stringify(parsedData.respostas));
+    } else {
+      alert("Estrutura do gabarito: " + Object.keys(parsedData).join(", "));
+    }
 
     // Show the complete correction button
     completeCorrecaoBtn.classList.remove("hidden");
@@ -656,8 +667,7 @@ function processGabaritoQRData(data) {
     // Return success
     return true;
   } catch (error) {
-    console.error("Error processing gabarito QR data:", error);
-    alert("Erro ao processar dados do gabarito no QR code");
+    alert("Erro ao processar gabarito: " + error.message);
     return false;
   }
 }
