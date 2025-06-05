@@ -79,6 +79,20 @@ const completeCorrecaoBtn = document.getElementById("complete-correction");
 function init() {
   // Event Listeners
   loginBtn.addEventListener("click", handleLogin);
+
+  // Add Enter key support for login
+  usernameInput.addEventListener("keypress", function (e) {
+    if (e.key === "Enter") {
+      passwordInput.focus();
+    }
+  });
+
+  passwordInput.addEventListener("keypress", function (e) {
+    if (e.key === "Enter") {
+      handleLogin();
+    }
+  });
+
   openSidebarBtn.addEventListener("click", openSidebar);
   closeSidebarBtn.addEventListener("click", closeSidebar);
   sidebarOverlay.addEventListener("click", closeSidebar);
@@ -103,20 +117,27 @@ function init() {
 
   // Correção buttons
   resetScanBtn.addEventListener("click", resetCorrection);
-  document.getElementById("take-photo").addEventListener("click", () => {
-    simulateQRScan();
-  });
-  document.getElementById("start-camera").addEventListener("click", () => {
-    startCamera();
-  });
+
+  // Botão de tirar foto
+  const takePhotoBtn = document.getElementById("take-photo");
+  if (takePhotoBtn) {
+    takePhotoBtn.addEventListener("click", () => {
+      if (!cameraStream) {
+        alert("Por favor, ative a câmera primeiro.");
+        return;
+      }
+      simulateQRScan();
+    });
+  }
+
+  // Botão de ativar câmera
+  const startCameraBtn = document.getElementById("start-camera");
+  if (startCameraBtn) {
+    startCameraBtn.addEventListener("click", startCamera);
+  }
 
   nextStepBtn.addEventListener("click", goToNextStep);
   completeCorrecaoBtn.addEventListener("click", completeCorrection);
-
-  // Start camera (when on correction page)
-  if (window.location.hash === "#correcao") {
-    //startCamera();
-  }
 
   // Check for hash in URL
   handleUrlHash();
@@ -124,10 +145,10 @@ function init() {
   // Listen for hash changes
   window.addEventListener("hashchange", handleUrlHash);
 
-  // Listen for resize events to handle responsive behavior
+  // Listen for resize events
   window.addEventListener("resize", handleResize);
 
-  // Handle clicks outside sidebar to close it on mobile
+  // Handle clicks outside sidebar
   document.addEventListener("click", function (e) {
     if (
       window.innerWidth < 768 &&
@@ -166,23 +187,33 @@ function adjustCamera() {
     const videoContainer = qrVideo.parentElement;
     if (videoContainer) {
       if (currentCorrection.step === 2) {
-        // Para a etapa 2 (folha A4), usar proporção mais alta
+        // Para a etapa 2 (folha A4), otimizar para leitura próxima do papel
         videoContainer.style.maxWidth = "100%";
         videoContainer.style.width = "100%";
-        videoContainer.style.maxHeight = "80vh";
         videoContainer.style.height = "80vh";
+        videoContainer.style.maxHeight = "80vh";
         videoContainer.style.margin = "0 auto";
         videoContainer.style.position = "relative";
         videoContainer.style.overflow = "hidden";
+        videoContainer.style.backgroundColor = "#000";
 
-        // Ajusta o vídeo para cobrir o container mantendo a proporção
+        // Ajusta o vídeo para melhor visualização do papel A4
         qrVideo.style.width = "100%";
         qrVideo.style.height = "100%";
-        qrVideo.style.objectFit = "cover";
+        qrVideo.style.objectFit = "contain"; // Mudado para 'contain' para não cortar as bordas
         qrVideo.style.position = "absolute";
         qrVideo.style.top = "50%";
         qrVideo.style.left = "50%";
         qrVideo.style.transform = "translate(-50%, -50%)";
+
+        // Adiciona guias de alinhamento para o papel A4
+        const guide = videoContainer.querySelector(".qr-guide");
+        if (guide) {
+          guide.style.width = "85%";
+          guide.style.height = "95%";
+          guide.style.border = "2px solid rgba(255, 255, 255, 0.8)";
+          guide.style.boxShadow = "0 0 0 2000px rgba(0, 0, 0, 0.3)";
+        }
       } else {
         // Para a etapa 1 (QR code), otimizar para leitura do QR
         videoContainer.style.width = "100%";
@@ -191,6 +222,7 @@ function adjustCamera() {
         videoContainer.style.margin = "0 auto";
         videoContainer.style.position = "relative";
         videoContainer.style.overflow = "hidden";
+        videoContainer.style.backgroundColor = "#000";
 
         // Ajusta o vídeo para melhor leitura do QR
         qrVideo.style.width = "100%";
@@ -200,6 +232,15 @@ function adjustCamera() {
         qrVideo.style.top = "50%";
         qrVideo.style.left = "50%";
         qrVideo.style.transform = "translate(-50%, -50%)";
+
+        // Ajusta o guia para o QR code
+        const guide = videoContainer.querySelector(".qr-guide");
+        if (guide) {
+          guide.style.width = "70%";
+          guide.style.height = "70%";
+          guide.style.border = "2px solid rgba(255, 255, 255, 0.5)";
+          guide.style.boxShadow = "none";
+        }
       }
     }
   }
