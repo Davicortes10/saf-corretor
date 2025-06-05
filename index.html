@@ -53,19 +53,96 @@
       /* Fix video aspect ratio on mobile */
       .video-container {
         position: relative;
-        width: 100%;
-        height: 0;
-        padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+        margin: 0 auto;
+        background: #000;
         overflow: hidden;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      .video-container::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        pointer-events: none;
+        z-index: 2;
       }
 
       .video-container video {
         position: absolute;
-        top: 0;
-        left: 0;
         width: 100%;
         height: 100%;
         object-fit: cover;
+      }
+
+      .camera-active {
+        animation: cameraFadeIn 0.3s ease-out;
+      }
+
+      /* Guia de alinhamento para QR code */
+      .qr-guide {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 70%;
+        height: 70%;
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        border-radius: 12px;
+        pointer-events: none;
+        z-index: 2;
+      }
+
+      .qr-guide::before,
+      .qr-guide::after {
+        content: "";
+        position: absolute;
+        background: rgba(255, 255, 255, 0.5);
+      }
+
+      .qr-guide::before {
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 1px;
+      }
+
+      .qr-guide::after {
+        left: 50%;
+        top: 0;
+        bottom: 0;
+        width: 1px;
+      }
+
+      @keyframes cameraFadeIn {
+        from {
+          opacity: 0;
+          transform: scale(0.95);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      /* Ajustes para mobile */
+      @media (max-width: 768px) {
+        .video-container {
+          height: 70vh;
+          max-height: 600px;
+          margin: 0 -1rem;
+          border-radius: 0;
+        }
+
+        .video-container::before,
+        .qr-guide {
+          border-radius: 0;
+        }
       }
 
       /* Ensure inputs are properly sized on mobile */
@@ -105,6 +182,47 @@
         .h-screen {
           height: -webkit-fill-available;
         }
+      }
+
+      /* Alignment dots */
+      .alignment-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        pointer-events: none;
+        z-index: 3;
+      }
+
+      .corner-dot {
+        position: absolute;
+        width: 8px; /* Reduzido de ~20px */
+        height: 8px; /* Reduzido de ~20px */
+        background-color: red;
+        border: 2px solid white; /* Reduzido de ~3px */
+        border-radius: 50%;
+        box-shadow: 0 0 4px rgba(0, 0, 0, 0.5); /* Reduzido de ~6px */
+      }
+
+      .corner-dot.top-left {
+        top: 20px; /* Ajustado para manter proporção */
+        left: 20px; /* Ajustado para manter proporção */
+      }
+
+      .corner-dot.top-right {
+        top: 20px; /* Ajustado para manter proporção */
+        right: 20px; /* Ajustado para manter proporção */
+      }
+
+      .corner-dot.bottom-left {
+        bottom: 20px; /* Ajustado para manter proporção */
+        left: 20px; /* Ajustado para manter proporção */
+      }
+
+      .corner-dot.bottom-right {
+        bottom: 20px; /* Ajustado para manter proporção */
+        right: 20px; /* Ajustado para manter proporção */
       }
     </style>
   </head>
@@ -313,6 +431,7 @@
                   class="video-container mb-4 rounded-lg overflow-hidden bg-black mx-auto sm:max-w-md"
                 >
                   <video id="qr-video"></video>
+                  <div class="qr-guide"></div>
                 </div>
 
                 <div
