@@ -168,22 +168,38 @@ function adjustCamera() {
       if (currentCorrection.step === 2) {
         // Para a etapa 2 (folha A4), usar proporção mais alta
         videoContainer.style.maxWidth = "100%";
-        videoContainer.style.width = "500px"; // Largura máxima para desktop
-        videoContainer.style.paddingBottom = "141.4%"; // Proporção A4 (√2)
-
-        // Ajustes específicos para mobile
-        if (isMobile()) {
-          videoContainer.style.width = "100%";
-          videoContainer.style.maxHeight = "80vh";
-          videoContainer.style.paddingBottom = "141.4%";
-        }
-      } else {
-        // Para a etapa 1 (QR code), manter proporção mais quadrada
-        const aspectRatio =
-          window.innerWidth > window.innerHeight ? 4 / 3 : 3 / 4;
         videoContainer.style.width = "100%";
-        videoContainer.style.maxWidth = "400px";
-        videoContainer.style.paddingBottom = `${(1 / aspectRatio) * 100}%`;
+        videoContainer.style.maxHeight = "80vh";
+        videoContainer.style.height = "80vh";
+        videoContainer.style.margin = "0 auto";
+        videoContainer.style.position = "relative";
+        videoContainer.style.overflow = "hidden";
+
+        // Ajusta o vídeo para cobrir o container mantendo a proporção
+        qrVideo.style.width = "100%";
+        qrVideo.style.height = "100%";
+        qrVideo.style.objectFit = "cover";
+        qrVideo.style.position = "absolute";
+        qrVideo.style.top = "50%";
+        qrVideo.style.left = "50%";
+        qrVideo.style.transform = "translate(-50%, -50%)";
+      } else {
+        // Para a etapa 1 (QR code), otimizar para leitura do QR
+        videoContainer.style.width = "100%";
+        videoContainer.style.maxWidth = "500px";
+        videoContainer.style.height = "500px";
+        videoContainer.style.margin = "0 auto";
+        videoContainer.style.position = "relative";
+        videoContainer.style.overflow = "hidden";
+
+        // Ajusta o vídeo para melhor leitura do QR
+        qrVideo.style.width = "100%";
+        qrVideo.style.height = "100%";
+        qrVideo.style.objectFit = "cover";
+        qrVideo.style.position = "absolute";
+        qrVideo.style.top = "50%";
+        qrVideo.style.left = "50%";
+        qrVideo.style.transform = "translate(-50%, -50%)";
       }
     }
   }
@@ -755,46 +771,136 @@ function renderCorrecoes() {
 // Camera handling for QR code
 let cameraStream = null;
 
-function startCamera() {
-  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-    // Stop any existing stream
+// Start camera with optimized settings
+async function startCamera() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    alert("Seu navegador não suporta acesso à câmera");
+    return;
+  }
+
+  try {
+    // Primeiro tenta parar qualquer stream existente
     stopCamera();
 
-    // Get constraints based on device and step
-    const constraints = {
-      video: {
-        facingMode: isMobile() ? "environment" : "user",
-        width: { ideal: 1920 }, // Aumentado para melhor qualidade
-        height: { ideal: 2560 }, // Proporção mais adequada para A4
-        aspectRatio: { ideal: 0.7071 }, // Proporção aproximada do A4 (1/√2)
+    // Lista todas as câmeras disponíveis
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const cameras = devices.filter((device) => device.kind === "videoinput");
+
+    // Se não houver câmeras, retorna erro
+    if (cameras.length === 0) {
+      throw new Error("Nenhuma câmera encontrada no dispositivo");
+    }
+
+    // Tenta diferentes configurações de câmera em ordem de preferência
+    const constraints = [
+      // Primeira tentativa: câmera traseira com configurações ideais
+      {
+        video: {
+          facingMode: "environment",
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+        },
       },
-    };
+      // Segunda tentativa: câmera traseira com configurações básicas
+      {
+        video: {
+          facingMode: "environment",
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+      },
+      // Terceira tentativa: qualquer câmera disponível
+      {
+        video: true,
+      },
+    ];
 
-    // Request camera access
-    navigator.mediaDevices
-      .getUserMedia(constraints)
-      .then((stream) => {
-        cameraStream = stream;
-        qrVideo.srcObject = stream;
-        qrVideo.play();
+    let stream = null;
+    let error = null;
 
-        // Ajusta o tamanho do container de vídeo baseado na etapa atual
-        adjustCamera();
-      })
-      .catch((err) => {
-        console.error("Erro ao acessar a câmera:", err);
-        alert("Não foi possível acessar a câmera. Verifique as permissões.");
-      });
-  } else {
-    alert("Seu navegador não suporta acesso à câmera");
+    // Tenta cada configuração até uma funcionar
+    for (const constraint of constraints) {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia(constraint);
+        if (stream) break;
+      } catch (e) {
+        error = e;
+        console.log("Tentativa falhou, tentando próxima configuração...", e);
+        continue;
+      }
+    }
+
+    // Se nenhuma tentativa funcionou, lança o último erro
+    if (!stream) {
+      throw error || new Error("Não foi possível iniciar a câmera");
+    }
+
+    // Configura o stream no vídeo
+    cameraStream = stream;
+    qrVideo.srcObject = stream;
+
+    // Aguarda o carregamento do vídeo
+    await new Promise((resolve) => {
+      qrVideo.onloadedmetadata = () => {
+        qrVideo
+          .play()
+          .then(resolve)
+          .catch((e) => {
+            console.error("Erro ao iniciar reprodução do vídeo:", e);
+            resolve(); // Continua mesmo com erro de play
+          });
+      };
+    });
+
+    // Ajusta o layout da câmera
+    adjustCamera();
+
+    // Adiciona classe de feedback visual
+    qrVideo.classList.add("camera-active");
+
+    console.log("Câmera iniciada com sucesso!");
+  } catch (err) {
+    console.error("Erro detalhado ao acessar a câmera:", err);
+
+    let mensagemErro = "Não foi possível acessar a câmera. ";
+
+    if (err.name === "NotAllowedError") {
+      mensagemErro +=
+        "Verifique se você permitiu o acesso à câmera nas configurações do navegador.";
+    } else if (err.name === "NotReadableError") {
+      mensagemErro +=
+        "A câmera pode estar sendo usada por outro aplicativo. Feche outros aplicativos que possam estar usando a câmera e tente novamente.";
+    } else if (err.name === "NotFoundError") {
+      mensagemErro += "Nenhuma câmera foi encontrada no dispositivo.";
+    } else {
+      mensagemErro += "Erro: " + (err.message || err.name || "desconhecido");
+    }
+
+    alert(mensagemErro);
   }
 }
 
+// Função mais robusta para parar a câmera
 function stopCamera() {
   if (cameraStream) {
-    cameraStream.getTracks().forEach((track) => track.stop());
+    try {
+      cameraStream.getTracks().forEach((track) => {
+        track.stop();
+        cameraStream.removeTrack(track);
+      });
+    } catch (e) {
+      console.error("Erro ao parar câmera:", e);
+    }
     cameraStream = null;
-    qrVideo.srcObject = null;
+  }
+
+  if (qrVideo) {
+    try {
+      qrVideo.srcObject = null;
+      qrVideo.classList.remove("camera-active");
+    } catch (e) {
+      console.error("Erro ao limpar vídeo:", e);
+    }
   }
 }
 
