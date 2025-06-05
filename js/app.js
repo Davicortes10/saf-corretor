@@ -600,51 +600,76 @@ function completeCorrection() {
 
 // Format gabarito for display
 function formatGabarito(gabarito) {
-  // Create a simple summary of the gabarito responses
-  if (!gabarito || !gabarito.respostas) {
-    alert("Gabarito inválido: " + JSON.stringify(gabarito));
-    return "N/A";
+  try {
+    console.log("Formatando gabarito:", gabarito);
+
+    // Se não houver gabarito ou respostas
+    if (!gabarito || (!gabarito.respostas && typeof gabarito !== "object")) {
+      return "N/A";
+    }
+
+    // Usa as respostas do objeto gabarito ou o próprio objeto se não houver propriedade 'respostas'
+    const respostas = gabarito.respostas || gabarito;
+
+    // Formata as respostas
+    const formattedAnswers = Object.entries(respostas)
+      .sort((a, b) => parseInt(a[0]) - parseInt(b[0])) // Ordena por número da questão
+      .map(([questao, resposta]) => `Q${questao}: ${resposta}`)
+      .join(", ");
+
+    return formattedAnswers || "N/A";
+  } catch (error) {
+    console.error("[ERRO] Falha ao formatar gabarito:", error);
+    return "Erro ao formatar gabarito";
   }
-
-  // Get the answers as an array
-  const respostas = gabarito.respostas;
-
-  // Alert para ver o formato das respostas
-  alert("Formatando respostas: " + JSON.stringify(respostas));
-
-  // Format each answer as "Q1: A, Q2: B, etc"
-  const formattedAnswers = Object.entries(respostas)
-    .map(([questao, resposta]) => `Q${questao}: ${resposta}`)
-    .join(", ");
-
-  return formattedAnswers || "N/A";
 }
 
 // Process QR code data from step 1 (aluno data)
 function processAlunoQRData(data) {
   try {
-    // Se vier como string JSON contendo 'qr_codes'
-    if (typeof data === "object" && typeof data.qr_codes === "string") {
-      // Corrige aspas simples para aspas duplas
-      const fixedString = data.qr_codes.replace(/'/g, '"');
-      data = JSON.parse(fixedString);
+    console.log("Dados brutos do aluno recebidos:", data);
+
+    // Se vier como string JSON
+    let parsedData = data;
+    if (typeof data === "string") {
+      parsedData = JSON.parse(data);
+    }
+
+    // Se vier dentro de um objeto com qr_codes
+    if (parsedData.qr_codes) {
+      try {
+        // Tenta corrigir aspas simples para duplas
+        const fixedString = parsedData.qr_codes.replace(/'/g, '"');
+        parsedData = JSON.parse(fixedString);
+      } catch (e) {
+        console.error("Erro ao fazer parse do qr_codes:", e);
+        parsedData = parsedData.qr_codes; // Usa o valor original se falhar
+      }
+    }
+
+    console.log("Dados do aluno após parse:", parsedData);
+
+    // Verifica se os dados necessários estão presentes
+    if (
+      !parsedData.aluno_nome ||
+      !parsedData.nome_da_escola ||
+      !parsedData.nome_da_turma
+    ) {
+      throw new Error("Dados do aluno incompletos no QR code");
     }
 
     // Salva os dados no estado da aplicação
-    currentCorrection.aluno = data;
-    currentCorrection.totalQuestoes = data.total_questoes;
+    currentCorrection.aluno = parsedData;
+    currentCorrection.totalQuestoes = parsedData.total_questoes || 0;
 
-    // Atualiza a interface com os dados reais do aluno
-    document.getElementById("aluno-nome").textContent =
-      data.aluno_nome || "Aluno não encontrado";
+    // Atualiza a interface com os dados do aluno
+    document.getElementById("aluno-nome").textContent = parsedData.aluno_nome;
     document.getElementById("escola-nome").textContent =
-      data.nome_da_escola || "N/A";
+      parsedData.nome_da_escola;
     document.getElementById("turma-nome").textContent =
-      data.nome_da_turma || "N/A";
-    // document.getElementById("turma-serie").textContent = data.serie || "N/A";
-    // document.getElementById("turma-turno").textContent = data.turno || "N/A";
+      parsedData.nome_da_turma;
     document.getElementById("total-questoes").textContent =
-      data.total_questoes || "N/A";
+      parsedData.total_questoes || "N/A";
 
     // Mostra o painel de informações do aluno
     alunoInfo.classList.remove("hidden");
@@ -658,7 +683,7 @@ function processAlunoQRData(data) {
     return true;
   } catch (error) {
     console.error("[ERRO] Falha ao processar dados do aluno:", error);
-    alert("Erro ao processar dados do aluno no QR code");
+    alert("Erro ao processar dados do aluno: " + error.message);
     return false;
   }
 }
@@ -666,39 +691,54 @@ function processAlunoQRData(data) {
 // Process QR code data from step 2 (gabarito data)
 function processGabaritoQRData(data) {
   try {
-    // Alert dos dados brutos recebidos
-    alert("Dados brutos recebidos: " + JSON.stringify(data));
+    console.log("Dados brutos do gabarito recebidos:", data);
 
-    // Try to parse the JSON if it's a string
-    let parsedData;
-    try {
-      parsedData = typeof data === "string" ? JSON.parse(data) : data;
-      // Alert dos dados após o parse
-      alert("Dados após parse: " + JSON.stringify(parsedData));
-    } catch (e) {
-      alert("Erro ao fazer parse do JSON: " + e.message);
-      return false;
+    // Se vier como string JSON
+    let parsedData = data;
+    if (typeof data === "string") {
+      parsedData = JSON.parse(data);
     }
 
-    // Save the gabarito data
+    // Se vier dentro de um objeto com qr_codes
+    if (parsedData.qr_codes) {
+      try {
+        // Tenta corrigir aspas simples para duplas
+        const fixedString = parsedData.qr_codes.replace(/'/g, '"');
+        parsedData = JSON.parse(fixedString);
+      } catch (e) {
+        console.error("Erro ao fazer parse do qr_codes:", e);
+        parsedData = parsedData.qr_codes; // Usa o valor original se falhar
+      }
+    }
+
+    console.log("Dados do gabarito após parse:", parsedData);
+
+    // Verifica se há respostas no gabarito
+    if (!parsedData.respostas && typeof parsedData === "object") {
+      // Se não houver propriedade 'respostas', assume que o objeto inteiro é o gabarito
+      parsedData = { respostas: parsedData };
+    }
+
+    // Verifica se os dados são válidos
+    if (
+      !parsedData.respostas ||
+      Object.keys(parsedData.respostas).length === 0
+    ) {
+      throw new Error("Nenhuma resposta encontrada no gabarito");
+    }
+
+    // Salva os dados no estado da aplicação
     currentCorrection.gabarito = parsedData;
 
-    // Alert do formato das respostas
-    if (parsedData.respostas) {
-      alert("Respostas encontradas: " + JSON.stringify(parsedData.respostas));
-    } else {
-      alert("Estrutura do gabarito: " + Object.keys(parsedData).join(", "));
-    }
-
-    // Show the complete correction button
+    // Mostra o botão de finalizar correção
     completeCorrecaoBtn.classList.remove("hidden");
 
-    // Stop the camera
+    // Para a câmera
     stopCamera();
 
-    // Return success
     return true;
   } catch (error) {
+    console.error("[ERRO] Falha ao processar gabarito:", error);
     alert("Erro ao processar gabarito: " + error.message);
     return false;
   }
@@ -915,9 +955,12 @@ function isMobile() {
 
 // Simulated QR code scanning (in a real app, this would use a QR code library)
 async function simulateQRScan() {
-  if (!cameraStream) return;
+  if (!cameraStream) {
+    alert("Câmera não está ativa. Por favor, ative a câmera primeiro.");
+    return;
+  }
 
-  if (currentCorrection.step === 1) {
+  try {
     const canvas = document.createElement("canvas");
     const context = canvas.getContext("2d");
 
@@ -931,92 +974,46 @@ async function simulateQRScan() {
     // Converte o canvas para blob (imagem PNG)
     canvas.toBlob(async function (blob) {
       if (!blob) {
-        alert("Erro ao capturar imagem.");
-        return;
+        throw new Error("Erro ao capturar imagem");
       }
 
-      // Prepara os dados para envio
       const formData = new FormData();
-      formData.append("imagem", blob, "captura.png");
-
-      try {
-        const response = await fetch(
-          "https://gerador-gabarito-leitor-qrcode.lh6c5d.easypanel.host/api/ler-qrcode/",
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
-
-        const result = await response.json();
-        console.log("Resposta da API:", result);
-        handleQRCodeDetection(result);
-      } catch (error) {
-        console.error("Erro ao enviar imagem para a API:", error);
-        alert("Erro ao processar a imagem.");
-      }
-    }, "image/png");
-  } else if (currentCorrection.step === 2) {
-    const canvas = document.createElement("canvas");
-    const context = canvas.getContext("2d");
-
-    // Ajusta o tamanho do canvas para o vídeo
-    canvas.width = qrVideo.videoWidth;
-    canvas.height = qrVideo.videoHeight;
-
-    // Desenha o frame atual do vídeo no canvas
-    context.drawImage(qrVideo, 0, 0, canvas.width, canvas.height);
-
-    // Converte o canvas para blob (imagem PNG)
-    canvas.toBlob(async function (blob) {
-      if (!blob) {
-        alert("Erro ao capturar imagem.");
-        return;
-      }
-
-      // Prepara os dados para envio
-      const formData = new FormData();
-
-      // Adiciona a imagem como um arquivo
       const file = new File([blob], "captura.png", { type: "image/png" });
       formData.append("imagem", file);
 
-      // Adiciona o número de questões como string
-      formData.append(
-        "numero_questoes",
-        String(currentCorrection.totalQuestoes || "")
-      );
-
-      try {
-        // Adiciona um alert para ver os dados sendo enviados
-        alert(
-          "Enviando número de questões: " +
-            String(currentCorrection.totalQuestoes || "")
+      // Adiciona o número de questões apenas na etapa 2
+      if (currentCorrection.step === 2) {
+        formData.append(
+          "numero_questoes",
+          String(currentCorrection.totalQuestoes || "")
         );
-
-        // Realiza a requisição POST para a API
-        const response = await fetch(
-          "https://gerador-gabarito-leitor-gabarito.lh6c5d.easypanel.host/api/leitor/",
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
-
-        // Adiciona um alert para ver a resposta da API
-        alert("Resposta da API: " + JSON.stringify(result));
-
-        handleQRCodeDetection(result);
-      } catch (error) {
-        alert("Erro ao enviar para API: " + error.message);
       }
+
+      // Define a URL da API baseado na etapa
+      const apiUrl =
+        currentCorrection.step === 1
+          ? "https://gerador-gabarito-leitor-qrcode.lh6c5d.easypanel.host/api/ler-qrcode/"
+          : "https://gerador-gabarito-leitor-gabarito.lh6c5d.easypanel.host/api/leitor/";
+
+      // Faz a requisição para a API
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erro na API: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log("Resposta da API:", result);
+
+      // Processa o resultado
+      handleQRCodeDetection(result);
     }, "image/png");
+  } catch (error) {
+    console.error("Erro ao processar imagem:", error);
+    alert("Erro ao processar a imagem: " + error.message);
   }
 }
 
