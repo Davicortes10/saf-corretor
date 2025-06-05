@@ -548,11 +548,15 @@ function goToNextStep() {
     startCamera();
 
     // Depois adiciona os pontos de marcação para a etapa 2
-    setTimeout(() => {
-      const videoContainer = qrVideo.parentElement;
-      videoContainer.style.position = "relative"; // Garante que o posicionamento absoluto funcione
+    const videoContainer = qrVideo.parentElement;
+    if (videoContainer) {
+      // Remove overlay anterior se existir
+      const oldOverlay = videoContainer.querySelector(".alignment-overlay");
+      if (oldOverlay) {
+        oldOverlay.remove();
+      }
 
-      // Adiciona o overlay sem substituir o vídeo
+      // Adiciona novo overlay com os pontos
       const overlayDiv = document.createElement("div");
       overlayDiv.className = "alignment-overlay";
       overlayDiv.innerHTML = `
@@ -562,49 +566,7 @@ function goToNextStep() {
         <div class="corner-dot bottom-right"></div>
       `;
       videoContainer.appendChild(overlayDiv);
-
-      // Adiciona o estilo para os pontos de marcação
-      const style = document.createElement("style");
-      style.textContent = `
-        .alignment-overlay {
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          z-index: 10;
-          pointer-events: none;
-        }
-        .corner-dot {
-          position: absolute;
-          width: 20px;
-          height: 20px;
-          border-radius: 50%;
-          background: rgba(255, 0, 0, 0.7);
-          border: 2px solid white;
-        }
-        .top-left {
-          top: 10%;
-          left: 10%;
-        }
-        .top-right {
-          top: 10%;
-          right: 10%;
-        }
-        .bottom-left {
-          bottom: 10%;
-          left: 10%;
-        }
-        .bottom-right {
-          bottom: 10%;
-          right: 10%;
-        }
-      `;
-      document.head.appendChild(style);
-    }, 500); // Pequeno delay para garantir que a câmera esteja ativa
-
-    // Hide next button, show complete button
-    nextStepBtn.classList.remove("hidden");
+    }
   }
 }
 
